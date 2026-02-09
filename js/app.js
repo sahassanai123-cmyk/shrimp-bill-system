@@ -340,14 +340,14 @@ function addSplitRow(pondIndex) {
         </td>
         <td style="position: relative;">
             <div style="display: flex; gap: 6px; align-items: center;">
-                <input type="text" class="input-field split-description" placeholder="รายละเอียด เช่น ค่าไฟ, ปูน" style="flex: 1; border-left: 3px solid var(--warning);" oninput="updateSplitRowsInPonds('${splitId}')">
+                <input type="text" class="input-field split-description" placeholder="ชื่อสินค้าที่หาร" style="flex: 1; border-left: 3px solid var(--success);" oninput="updateSplitRowsInPonds('${splitId}')">
                 <button type="button" class="btn-split-selector" onclick="togglePondSelector('${splitId}')">
                     <span class="split-selector-icon">🦐</span>
                     <span id="count-${splitId}">0</span> บ่อ
                 </button>
             </div>
-            <div id="selector-${splitId}" class="pond-selector" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; padding: 8px; background: var(--bg-secondary); border: 2px solid var(--warning); border-radius: 6px; max-height: 180px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                <div style="font-size: 0.7rem; color: var(--warning); font-weight: 600; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border);">
+            <div id="selector-${splitId}" class="pond-selector" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; padding: 8px; background: var(--bg-secondary); border: 2px solid var(--success); border-radius: 6px; max-height: 180px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <div style="font-size: 0.7rem; color: var(--success); font-weight: 600; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border);">
                     ✓ เลือกบ่อที่ต้องการหาร (อย่างน้อย 2 บ่อ)
                 </div>
                 ${farm.ponds.map((pondName, idx) => `
@@ -365,7 +365,7 @@ function addSplitRow(pondIndex) {
         </td>
         <td><input type="number" class="input-field asset-price split-price" value="0" min="0" step="0.01" 
                    oninput="calculateSplitTotal('${splitId}')" placeholder="ราคารวม"></td>
-        <td><input type="text" class="input-field asset-total split-total" value="0.00" readonly style="background: #fff3cd; font-weight: 600;"></td>
+        <td><input type="text" class="input-field asset-total split-total" value="0.00" readonly></td>
         <td>
             <div class="asset-actions">
                 <button class="icon-btn delete" onclick="deleteSplitRow(this, '${splitId}')" title="ลบ">🗑️</button>
@@ -494,16 +494,16 @@ function updateSplitRowsInPonds(splitId) {
             // FIX: เพิ่ม hidden input class="asset-total" เพื่อให้คำนวณยอดรวมได้
             displayRow.innerHTML = `
                 <td>
-                    <div class="split-badge">÷ หาร</div>
+                    <div class="split-badge"></div>
                 </td>
                 <td>
-                    <div class="split-name">📌 ${description || '(รอกรอกรายละเอียด)'}</div>
+                    <div class="split-name">${description || '(รอกรอกรายละเอียด)'}</div>
                 </td>
-                <td style="text-align: right; font-weight: 500;">${qty}</td>
-                <td style="text-align: right; font-weight: 500;">${perPond.toFixed(2)}</td>
-                <td style="text-align: right;">
+                <td style="text-align: left; font-weight: 500;">${qty}</td>
+                <td style="text-align: left; font-weight: 500;">${perPond.toFixed(2)}</td>
+                <td style="text-align: left;">
                     <input type="hidden" class="asset-total" value="${perPond.toFixed(2)}">
-                    <span style="font-weight: 700;">${perPond.toFixed(2)}</span>
+                    <span style="font-weight: 500;">${perPond.toFixed(2)}</span>
                 </td>
                 <td style="text-align: center;">
                     <span class="split-tag">แสดงผล</span>

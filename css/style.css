@@ -430,17 +430,15 @@ button:disabled {
 
 /* ===== ข้อ 3: SPLIT ROW DESIGN (หารบ่อ) ===== */
 .split-row {
-    background: #ffffff !important;
-    border-left: 4px solid #ffc107 !important;
+    border-left: 4px solid var(--success) !important;
 }
 
 .split-type-badge {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: var(--warning);
-    color: #000;
-    padding: 4px 10px;
+    color: var(--text-primary);
+    padding: 0.25rem 1.75rem;
     border-radius: 4px;
     font-weight: 700;
     font-size: 0.7rem;
@@ -452,10 +450,10 @@ button:disabled {
 }
 
 .btn-split-selector {
-    background: var(--warning);
+    background: var(--success);
     color: #000;
     border: none;
-    padding: 0.4rem 0.6rem;
+    padding: 0.25rem 0.5rem;
     border-radius: 4px;
     font-size: 0.7rem;
     font-weight: 600;
@@ -468,9 +466,9 @@ button:disabled {
 }
 
 .btn-split-selector:hover {
-    background: #d39e00;
+    background: var(--success-dark);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .split-selector-icon {
@@ -505,8 +503,8 @@ button:disabled {
 }
 
 .split-display-row {
-    background: #ffffff !important;
-    border-left: 3px solid #ffc107 !important;
+    background: var(-- --primary-dark) !important;
+    border-left: 4px solid var(--success) !important;
 }
 
 .split-display-badge {
@@ -547,11 +545,6 @@ button:disabled {
     font-weight: 600;
 }
 
-.split-total {
-    background: #fff3cd !important;
-    font-weight: 700 !important;
-    color: var(--warning) !important;
-}
 
 .asset-actions {
     display: flex;
