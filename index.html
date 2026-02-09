@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบิลฟาร์มกุ้ง</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="brand-icon">🦐</span>
+            <span>ระบบบิลฟาร์มกุ้ง</span>
+        </div>
+        
+        <div class="nav-links">
+            <button class="nav-btn active" data-page="create" onclick="navigateTo('create')">
+                <span class="nav-icon">📝</span>
+                <span class="nav-text">สร้างบิล</span>
+            </button>
+            <button class="nav-btn" data-page="history" onclick="navigateTo('history')">
+                <span class="nav-icon">📚</span>
+                <span class="nav-text">ประวัติ</span>
+            </button>
+            <button class="nav-btn" data-page="manage" onclick="navigateTo('manage')">
+                <span class="nav-icon">📦</span>
+                <span class="nav-text">สินค้า</span>
+            </button>
+            <button class="nav-btn" data-page="settings" onclick="navigateTo('settings')">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">ตั้งค่า</span>
+            </button>
+        </div>
+        
+        <button class="theme-toggle" onclick="toggleTheme()" title="เปลี่ยนธีม">
+            <span id="themeIcon">🌙</span>
+        </button>
+    </nav>
+
+    <!-- CREATE BILL PAGE -->
+    <div id="createPage" class="page active">
+        <div class="page-header">
+            <h1>📝 สร้างบิลใหม่</h1>
+            <p class="page-subtitle">เลือกฟาร์มและเพิ่มสินค้าสำหรับแต่ละบ่อ</p>
+        </div>
+
+        <div class="content-grid">
+            <div class="info-card">
+                <div class="form-group">
+                    <label for="farmSelect">🏭 เลือกฟาร์ม</label>
+                    <select id="farmSelect" class="input-field" onchange="loadPonds()">
+                        <option value="">-- เลือกฟาร์ม --</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="billDate">📅 วันที่</label>
+                    <input type="date" id="billDate" class="input-field">
+                </div>
+
+                <div id="pondCountDisplay" class="stat-badge" style="display: none;">
+                    <span class="stat-label">จำนวนบ่อ</span>
+                    <span class="stat-value" id="pondCountValue">0</span>
+                </div>
+            </div>
+
+            <div class="tips-card">
+                <div class="card-header">
+                    <h2>💡 เคล็ดลับ</h2>
+                </div>
+                <ul class="tips-list">
+                    <li>เลือกฟาร์มก่อนเพื่อดูรายการบ่อ</li>
+                    <li>สามารถเพิ่มสินค้าได้หลายรายการต่อบ่อ</li>
+                    <li>ใช้ "หารบ่อ" สำหรับค่าใช้จ่ายที่แบ่งกัน</li>
+                    <li>กดยุบ/ขยายบ่อเพื่อดูรายละเอียด</li>
+                </ul>
+                <div class="shortcut-info">
+                    ⌨️ กด ESC เพื่อปิดหน้าต่าง
+                </div>
+            </div>
+        </div>
+
+        <div id="pondsSection" style="display: none;">
+            <div class="section-header">
+                <h2>🦐 รายการสินค้าแต่ละบ่อ</h2>
+                <button class="btn-secondary" onclick="expandAllPonds()">📂 ขยายทั้งหมด</button>
+            </div>
+            
+            <div id="pondsContainer"></div>
+        </div>
+
+        <div id="actionBar" class="action-bar" style="display: none;">
+            <div class="total-display">
+                <span class="total-label">ยอดรวมทั้งหมด</span>
+                <span class="total-amount" id="grandTotal">0.00 บาท</span>
+            </div>
+            <button class="btn-success btn-large" onclick="saveBill()">💾 บันทึกบิล</button>
+        </div>
+    </div>
+
+    <!-- HISTORY PAGE -->
+    <div id="historyPage" class="page">
+        <div class="page-header">
+            <h1>📚 ประวัติการทำบิล</h1>
+            <p class="page-subtitle">ดู ค้นหา และจัดการบิลที่บันทึกไว้</p>
+        </div>
+
+        <div class="history-controls">
+            <div class="search-box">
+                <input type="text" id="historySearch" class="input-field" 
+                       placeholder="🔍 ค้นหาชื่อฟาร์ม วันที่ หรือเลขบิล..." 
+                       oninput="renderHistory()">
+            </div>
+            
+            <div class="filter-group">
+                <select id="historyFarmFilter" class="input-field" onchange="renderHistory()">
+                    <option value="">ฟาร์มทั้งหมด</option>
+                </select>
+                
+                <select id="historySortBy" class="input-field" onchange="sortHistory()">
+                    <option value="date-desc">วันที่ (ล่าสุด)</option>
+                    <option value="date-asc">วันที่ (เก่าสุด)</option>
+                    <option value="total-desc">ยอดรวม (มาก-น้อย)</option>
+                    <option value="total-asc">ยอดรวม (น้อย-มาก)</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="historyList" class="history-grid"></div>
+        
+        <div id="emptyHistory" class="empty-state" style="display: none;">
+            <div class="empty-icon">📝</div>
+            <h3>ยังไม่มีประวัติ</h3>
+            <p>เริ่มสร้างบิลแรกของคุณได้เลย</p>
+            <button class="btn-primary btn-large" onclick="navigateTo('create')">สร้างบิลใหม่</button>
+        </div>
+    </div>
+
+    <!-- MANAGE ASSETS PAGE (ข้อ 6: ปรับ Design) -->
+    <div id="managePage" class="page">
+        <div class="page-header">
+            <h1>📦 จัดการสินค้า</h1>
+            <p class="page-subtitle">เพิ่ม แก้ไข และจัดการรายการสินค้าทั้งหมด</p>
+        </div>
+
+        <!-- ข้อ 6: Section เพิ่มสินค้าใหม่ -->
+        <div class="add-section">
+            <h2>➕ เพิ่มสินค้าใหม่</h2>
+            <div class="asset-add-form">
+                <div class="form-group">
+                    <label>ประเภท (001-999)</label>
+                    <input type="text" id="newAssetType" class="input-field" placeholder="เช่น 001">
+                </div>
+                <div class="form-group">
+                    <label>ชื่อสินค้า</label>
+                    <input type="text" id="newAssetName" class="input-field" placeholder="เช่น จีบีที01">
+                </div>
+                <div class="form-group">
+                    <label>ราคา (บาท)</label>
+                    <input type="number" id="newAssetPrice" class="input-field" min="0" step="0.01" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <button class="btn-success btn-large" onclick="addNewAsset()" style="width: 100%;">
+                        ➕ เพิ่มสินค้า
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ข้อ 6: ปุ่ม Import/Export -->
+        <div class="import-export-section">
+            <button class="btn-secondary" onclick="saveAssetsToCSV()">📥 ส่งออก Asset.txt</button>
+            <button class="btn-secondary" onclick="exportAssets()">📊 ส่งออก CSV</button>
+            <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📤 นำเข้า CSV</button>
+            <input type="file" id="importFile" accept=".csv,.txt" style="display: none" onchange="importAssets(event)">
+        </div>
+
+        <div id="assetList" class="asset-grid"></div>
+    </div>
+
+    <!-- SETTINGS PAGE (ข้อ 7: UI จัดการฟาร์มแบบใหม่) -->
+    <div id="settingsPage" class="page">
+        <div class="page-header">
+            <h1>⚙️ ตั้งค่าระบบ</h1>
+            <p class="page-subtitle">จัดการฟาร์ม บ่อ และการตั้งค่าอื่นๆ</p>
+        </div>
+
+        <div class="settings-grid">
+            <!-- ข้อ 7: Farm Management แบบใหม่ (Table View) -->
+            <div class="settings-section">
+                <h2>🏭 จัดการฟาร์มและบ่อ</h2>
+                
+                <div class="farm-table-view">
+                    <div id="farmTableContainer"></div>
+                </div>
+
+                <div class="button-group" style="margin-top: 1rem;">
+                    <button class="btn-primary" onclick="toggleNameEditor()">✏️ แก้ไขชื่อฟาร์มและบ่อ</button>
+                    <button class="btn-warning" onclick="resetToDefault()">🔄 รีเซ็ตค่าเริ่มต้น</button>
+                </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="settings-section">
+                <h2>💾 จัดการข้อมูล</h2>
+                
+                <div class="stats-overview">
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="totalAssets">0</div>
+                            <div class="stat-desc">สินค้าทั้งหมด</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="totalBills">0</div>
+                            <div class="stat-desc">บิลที่บันทึก</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group vertical">
+                    <button class="btn-secondary" onclick="backupData()">💾 สำรองข้อมูล</button>
+                    <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()">📥 กู้คืนข้อมูล</button>
+                    <input type="file" id="restoreFile" accept=".json" style="display: none" onchange="restoreData(event)">
+                    <button class="btn-danger" onclick="clearAllData()">🗑️ ลบข้อมูลทั้งหมด</button>
+                </div>
+
+                <div class="info-box">
+                    <strong>💡 คำแนะนำ:</strong> สำรองข้อมูลเป็นประจำเพื่อป้องกันข้อมูลสูญหาย
+                </div>
+            </div>
+        </div>
+
+        <!-- Name Editor (Hidden by default) -->
+        <div id="nameEditorSection" class="name-editor" style="display: none;">
+            <div class="editor-header">
+                <h2>✏️ แก้ไขชื่อฟาร์มและบ่อ</h2>
+                <button class="close-btn" onclick="toggleNameEditor()">×</button>
+            </div>
+            <div id="nameEditorContent"></div>
+            <div class="editor-actions">
+                <button class="btn-success btn-large" onclick="saveNameChanges()">💾 บันทึกการเปลี่ยนแปลง</button>
+                <button class="btn-secondary" onclick="toggleNameEditor()">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bill Preview Modal -->
+    <div id="billPreviewModal" class="modal">
+        <div class="modal-content bill-preview">
+            <div class="modal-header">
+                <h2>📄 ตัวอย่างบิล</h2>
+                <button class="close-btn" onclick="closeBillPreview()">×</button>
+            </div>
+            <div class="bill-display">
+                <div id="billPreviewContent"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-success" onclick="exportCurrentBill()">📥 ดาวน์โหลด PDF</button>
+                <button class="btn-danger" onclick="deleteCurrentBill()">🗑️ ลบบิล</button>
+                <button class="btn-secondary" onclick="closeBillPreview()">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+        <div class="spinner"></div>
+        <p>กำลังประมวลผล...</p>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
