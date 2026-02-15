@@ -942,72 +942,188 @@ function closeBillPreview() {
     currentBillId = null;
 }
 
+// แปลงตัวเลขเป็นตัวอักษรไทย
+function numberToThaiText(number) {
+    const numbers = ['', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า'];
+    const positions = ['', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน', 'ล้าน'];
+
+    if (number === 0) return 'ศูนย์บาทถ้วน';
+
+    const [baht, satang] = Number(number).toFixed(2).split('.');
+    let bahtText = '';
+
+    const bahtDigits = baht.split('').reverse();
+
+    for (let i = 0; i < bahtDigits.length; i++) {
+        const digit = parseInt(bahtDigits[i]);
+        const position = i % 6;
+
+        if (digit === 0) {
+            if (i === 6) bahtText = 'ล้าน' + bahtText;
+            continue;
+        }
+
+        if (position === 1 && digit === 1) {
+            bahtText = 'สิบ' + bahtText;
+        } else if (position === 1 && digit === 2) {
+            bahtText = 'ยี่สิบ' + bahtText;
+        } else if (position === 0 && digit === 1 && i > 0) {
+            bahtText = 'เอ็ด' + bahtText;
+        } else {
+            bahtText = numbers[digit] + positions[position] + bahtText;
+        }
+
+        if (i === 6) bahtText = 'ล้าน' + bahtText;
+    }
+
+    const satangNum = parseInt(satang);
+    if (satangNum > 0) {
+        let satangText = '';
+        const satangDigits = satang.split('');
+
+        for (let i = 0; i < satangDigits.length; i++) {
+            const digit = parseInt(satangDigits[i]);
+
+            if (i === 0 && digit === 1) {
+                satangText = 'สิบ';
+            } else if (i === 0 && digit === 2) {
+                satangText = 'ยี่สิบ';
+            } else if (i === 1 && digit === 1 && satangNum > 10) {
+                satangText += 'เอ็ด';
+            } else {
+                satangText += numbers[digit] + (i === 0 ? 'สิบ' : '');
+            }
+        }
+
+        return bahtText + 'บาท' + satangText + 'สตางค์';
+    }
+
+    return bahtText + 'บาทถ้วน';
+}
+
 function generateBillHTML(billData) {
+
     const dateObj = new Date(billData.date);
     const day = String(dateObj.getDate()).padStart(2, '0');
     const month = String(dateObj.getMonth() + 1).padStart(2, '0');
     const year = dateObj.getFullYear() + 543;
     const thaiDate = `${day}/${month}/${year}`;
-    
+
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const thaiTime = `${hours}:${minutes}`;
-    
+
+    const totalText = numberToThaiText(billData.total);
+    const pondNames = billData.ponds.map(p => p.name).join(', ');
+
     let html = `
         <div class="bill-a4">
-            <h2>${billData.farmName}</h2>
-            <div class="bill-info">
-                <div>วันที่: ${thaiDate} เวลา: ${thaiTime} น.</div>
-                <div>เลขที่บิล: ${billData.id}</div>
+            <div class="bill-header">
+                <div class="bill-header-row">
+                    <div class="bill-number">เลขที่ ${billData.id.substring(0, 10)}</div>
+                    <div class="bill-customer-type">เลขที่ 1301</div>
+                </div>
+
+                <div class="bill-shop-name">ดอนเกลี้ยงบริการ</div>
+
+                <div class="bill-header-info">
+                    <div class="bill-address">91 หมู่ 4 ต.ชลคราม อ.ดอนสัก จ.สุราษฎร์ธานี 84160</div>
+                    <div class="bill-phone">โทร. 08-9873-1534, 08-1968-7361</div>
+                    <div class="bill-doc-type">ใบเสนอสินค้า</div>
+                </div>
+            </div>
+
+            <div class="bill-customer-info">
+                <div class="bill-info-row">
+                    <span class="info-label">ชื่อฟาร์ม :</span>
+                    <span class="info-value">${billData.farmName}</span>
+                    <span class="info-label-right">วันที่:</span>
+                    <span class="info-value-right">${thaiDate}</span>
+                </div>
+                <div class="bill-info-row">
+                    <span class="info-label">ชื่อบ่อ :</span>
+                    <span class="info-value-full">${pondNames}</span>
+                </div>
             </div>
     `;
-    
-    billData.ponds.forEach(pond => {
-        // ข้อ 5: เพิ่ม page-break-before สำหรับบ่อที่มีข้อมูลเยอะ
+
+    billData.ponds.forEach((pond, index) => {
+
+        const paddingTop = index > 0 ? 'style="padding-top: 15mm;"' : '';
+
         html += `
-            <div class="bill-pond-section">
+            <div class="bill-pond-section" ${paddingTop}>
                 <div class="bill-pond-title">${pond.name}</div>
                 <table class="bill-table">
                     <thead>
                         <tr>
-                            <th style="width: 15%">ประเภท</th>
-                            <th style="width: 35%">รายการ</th>
-                            <th style="width: 12%">จำนวน</th>
-                            <th style="width: 18%">ราคา/หน่วย</th>
-                            <th style="width: 20%">รวม</th>
+                            <th style="width:15%">ประเภท</th>
+                            <th style="width:35%">รายการ</th>
+                            <th style="width:12%">จำนวน</th>
+                            <th style="width:18%">ราคา/หน่วย</th>
+                            <th style="width:20%">รวม</th>
                         </tr>
                     </thead>
                     <tbody>
         `;
-        
-        pond.items.forEach(item => {
+
+        (pond.items || []).forEach(item => {
+
+            const qty = Number(item.qty || 0);
+            const price = Number(item.price || 0);
+            const total = Number(item.total || (qty * price));
+
             html += `
                 <tr>
-                    <td>${item.type}</td>
-                    <td>${item.name}</td>
-                    <td style="text-align: right">${item.qty.toLocaleString('th-TH')}</td>
-                    <td style="text-align: right">${item.price.toLocaleString('th-TH', {minimumFractionDigits: 2})}</td>
-                    <td style="text-align: right">${item.total.toLocaleString('th-TH', {minimumFractionDigits: 2})}</td>
+                    <td>${item.type || ''}</td>
+                    <td>${item.name || ''}</td>
+                    <td style="text-align:right">${qty.toLocaleString('th-TH')}</td>
+                    <td style="text-align:right">${price.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</td>
+                    <td style="text-align:right">${total.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</td>
                 </tr>
             `;
         });
-        
+
         html += `
                     </tbody>
                 </table>
-                <div class="bill-pond-total">รวม ${pond.name} : ${pond.total.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท</div>
+                <div class="bill-pond-total">
+                    รวม ${pond.name} : ${pond.total.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
+                </div>
             </div>
         `;
     });
-    
+
     html += `
-            <div class="bill-grand-total">ยอดรวมทั้งหมด : ${billData.total.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท</div>
+            <div class="bill-grand-total">
+                ยอดรวมทั้งหมด : ${billData.total.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
+            </div>
+
+            <div class="bill-footer">
+    <div class="bill-total-text">
+        <span class="total-text-label">จำนวนเงิน (ตัวอักษร)</span>
+        <span class="total-text-value">${totalText}</span>
+    </div>
+    <div class="bill-signatures">
+        <div class="signature-box">
+            <span class="signature-label">ผู้รับสินค้า</span>
+            <div class="signature-line"></div>
+            <span class="signature-date">วันที่ ____________________</span>
+        </div>
+        <div class="signature-box">
+            <span class="signature-label">ผู้ส่งสินค้า</span>
+            <div class="signature-line"></div>
+            <span class="signature-date">วันที่ ____________________</span>
+        </div>
+    </div>
+</div>
         </div>
     `;
-    
+
     return html;
 }
+
 
 // ข้อ 5 & 6: Export PDF ตามโค้ดเดิม + ชื่อไฟล์ที่เหมาะสม
 function exportCurrentBill() {
